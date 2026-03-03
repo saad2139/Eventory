@@ -1,19 +1,19 @@
-name: Deploy Auth Service to AWS ECS
+name: Deploy Inventory Service to AWS ECS
 
 on:
   push:
     branches:
       - main
     paths:
-      - 'auth-service/**' 
-      - '.github/workflows/deploy-auth.yml'
+      - 'inventory-service/**'
+      - '.github/workflows/deploy-inventory.yml'
 
 env:
   AWS_REGION: us-east-1
-  ECR_REPOSITORY: eventory/auth
+  ECR_REPOSITORY: eventory/inventory
   ECS_CLUSTER: eventory-cluster
-  ECS_SERVICE: auth-service
-  CONTAINER_NAME: auth-service
+  ECS_SERVICE: inventory-service
+  CONTAINER_NAME: inventory-service
 
 jobs:
   deploy:
@@ -42,8 +42,8 @@ jobs:
           IMAGE_TAG: ${{ github.sha }}
         run: |
           # Build Docker image
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG auth-service/
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest auth-service/
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG inventory-service/
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest inventory-service/
 
       - name: Push Docker image to ECR
         env:
@@ -57,7 +57,7 @@ jobs:
       - name: Download current task definition
         run: |
           aws ecs describe-task-definition \
-            --task-definition eventory-auth-task-fargate \
+            --task-definition eventory-inventory-task-fargate \
             --query taskDefinition > task-definition.json
 
       - name: Update task definition with new image
@@ -78,7 +78,7 @@ jobs:
 
       - name: Deployment summary
         run: |
-          echo "Auth eployment completed successfully!"
+          echo "Inventory deployment completed successfully!"
           echo "Service: ${{ env.ECS_SERVICE }}"
           echo "Cluster: ${{ env.ECS_CLUSTER }}"
           echo "Image: ${{ steps.login-ecr.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}"
